@@ -1,1 +1,1 @@
-no need queries only use url
+no need query only use url
