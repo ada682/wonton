@@ -52,10 +52,9 @@ class Program
     {
         try
         {
-            Logger.Log($"Processing URL: {url}", LogType.Info); // Log the URL for debugging
+            Logger.Log($"Processing URL: {url}", LogType.Info);
             var uri = new Uri(url);
-        
-        // Check if URL contains a fragment
+
             if (string.IsNullOrEmpty(uri.Fragment))
             {
                 Logger.Log("URL has no fragment. Skipping.", LogType.Error);
@@ -66,16 +65,14 @@ class Program
             var fragmentParams = HttpUtility.ParseQueryString(fragment);
             var tgWebAppData = fragmentParams["tgWebAppData"];
 
-        // Check if tgWebAppData exists
             if (string.IsNullOrEmpty(tgWebAppData))
             {
                 Logger.Log("'tgWebAppData' not found in URL fragment. Skipping.", LogType.Error);
                 return;
             }
 
-            Logger.Log($"tgWebAppData: {tgWebAppData}", LogType.Info); // Log tgWebAppData for better debugging
+            Logger.Log($"tgWebAppData: {tgWebAppData}", LogType.Info); 
 
-            // Decode and parse tgWebAppData
             var tgWebAppDataParams = HttpUtility.ParseQueryString(HttpUtility.UrlDecode(tgWebAppData));
             var userString = tgWebAppDataParams["user"];
 
@@ -85,9 +82,8 @@ class Program
                 return;
             }
 
-            Logger.Log($"User data found: {userString}", LogType.Info); // Log the user data for debugging
+            Logger.Log($"User data found: {userString}", LogType.Info); 
 
-            // Try to deserialize user data
             var userData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(HttpUtility.UrlDecode(userString));
             if (userData == null || !userData.TryGetValue("id", out JsonElement idElement))
             {
@@ -98,7 +94,6 @@ class Program
             var id = idElement.GetInt32().ToString();
             Logger.Log($"Processing account: {userData.GetValueOrDefault("first_name").GetString()} (ID: {id})", LogType.Info);
 
-            // Get token and perform tasks
             var token = await GetToken(tgWebAppData);
             if (string.IsNullOrEmpty(token))
             {
