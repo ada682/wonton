@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
+using System.Linq;
 
 class Program
 {
@@ -30,7 +31,7 @@ class Program
 
     static async Task Main(string[] args)
     {
-        Logger.Log("Starting Wonton script...");
+        Logger.Log("Starting Wonton script...", LogType.Info);
         Logger.Log("t.me/slyntherinnn", LogType.Watermark);
 
         while (true)
@@ -40,7 +41,7 @@ class Program
             foreach (var url in urls)
             {
                 await ProcessAccount(url);
-                await Task.Delay(5000); 
+                await Task.Delay(5000);
             }
 
             Logger.Log("All accounts processed. Waiting 1 hour before restarting.", LogType.Info);
@@ -54,7 +55,7 @@ class Program
         {
             Logger.Log($"Processing URL: {url}", LogType.Info);
             var uri = new Uri(url);
-
+        
             if (string.IsNullOrEmpty(uri.Fragment))
             {
                 Logger.Log("URL has no fragment. Skipping.", LogType.Error);
@@ -71,10 +72,11 @@ class Program
                 return;
             }
 
-            Logger.Log($"tgWebAppData: {tgWebAppData}", LogType.Info); 
+            Logger.Log($"tgWebAppData: {tgWebAppData}", LogType.Info);
 
             var tgWebAppDataParams = HttpUtility.ParseQueryString(HttpUtility.UrlDecode(tgWebAppData));
             var userString = tgWebAppDataParams["user"];
+            var authDate = tgWebAppDataParams["auth_date"];
 
             if (string.IsNullOrEmpty(userString))
             {
@@ -82,7 +84,7 @@ class Program
                 return;
             }
 
-            Logger.Log($"User data found: {userString}", LogType.Info); 
+            Logger.Log($"User data found: {userString}", LogType.Info);
 
             var userData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(HttpUtility.UrlDecode(userString));
             if (userData == null || !userData.TryGetValue("id", out JsonElement idElement))
@@ -91,7 +93,7 @@ class Program
                 return;
             }
 
-            var id = idElement.GetInt32().ToString();
+            var id = idElement.GetInt64().ToString();
             Logger.Log($"Processing account: {userData.GetValueOrDefault("first_name").GetString()} (ID: {id})", LogType.Info);
 
             var token = await GetToken(tgWebAppData);
@@ -103,13 +105,13 @@ class Program
 
             Logger.Log("Token obtained. Performing tasks...", LogType.Success);
             await Checkin(token);
-            await Task.Delay(2000); 
+            await Task.Delay(2000);
 
             await PerformTasks(token);
-            await Task.Delay(2000); 
+            await Task.Delay(2000);
 
             await PlayGames(token);
-            await Task.Delay(2000); 
+            await Task.Delay(2000);
 
             await CheckFarming(token);
         }
@@ -165,7 +167,7 @@ class Program
             {
                 string lastCheckinDay = lastCheckinDayElement.ValueKind switch
                 {
-                    JsonValueKind.String => lastCheckinDayElement.GetString(),
+                    JsonValueKind.String => lastCheckinDayElement.GetString() ?? "Unknown",
                     JsonValueKind.Number => lastCheckinDayElement.GetInt32().ToString(),
                     _ => "Unknown"
                 };
